@@ -6,46 +6,31 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.example.demo.entity.Member;
 
 public class ProxySelector implements Selector {
 
-	private final QuerySelector querySelector;
-	private final Code code;
+	private final QuerySelector queryselector;
 
-	public ProxySelector(QuerySelector querySelector, Code code) {// 실제 객체를 프록시객체에 DI 주입
-		super();
-		this.querySelector = querySelector;
-		this.code = code;
+	public ProxySelector(QuerySelector queryselector) {// 실제 객체를 프록시객체에 DI 주입 (프록시는 실제 객체를 가지고 있어야한다)
+		this.queryselector = queryselector;
 	}
 
-	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("hello");
-
-	EntityManager entityManager = entityManagerFactory.createEntityManager();
-
-	EntityTransaction entityTransaction = entityManager.getTransaction();
-
 	@Override
-	public Object select() {
+	public void select() {
+
+		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("hello");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		EntityTransaction entityTransaction = entityManager.getTransaction();
+
 		// Transaction - Begin
 		entityTransaction.begin();
 
 		try {
-
-			if (Code.LAZY == code) {
-				System.out.println("Loading");
-
-			} else {
-
-				this.querySelector.select();
-			}
-			/*
-			 * Member findmember = entityManager.getReference(Member.class, 1l);
-			 */
-			Member member = new Member();
-			member.setTeamId(1L);
-			member.setUsername("Prxoy");
-			entityManager.persist(member);
+            System.out.println("프록시가 대신 실제 객체 호출");
+			queryselector.select();
 
 			// Transaction - Commit
 			entityTransaction.commit();
@@ -57,6 +42,6 @@ public class ProxySelector implements Selector {
 			entityManager.close();
 			// transaction = closed;
 		}
-		return null;
+
 	}
 }
